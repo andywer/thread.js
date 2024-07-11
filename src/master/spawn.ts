@@ -61,11 +61,14 @@ async function withTimeout<T>(promise: Promise<T>, timeoutInMs: number, errorMes
 function receiveInitMessage(worker: WorkerType): Promise<WorkerInitMessage> {
   return new Promise((resolve, reject) => {
     const messageHandler = ((event: MessageEvent) => {
-      debugMessages("Message from worker before finishing initialization:", event.data)
       if (isInitMessage(event.data)) {
         worker.removeEventListener("message", messageHandler)
         resolve(event.data)
-      } else if (isUncaughtErrorMessage(event.data)) {
+      } else {
+        debugMessages("Message from worker before finishing initialization:", event.data)
+      }
+
+      if (isUncaughtErrorMessage(event.data)) {
         worker.removeEventListener("message", messageHandler)
         reject(deserialize(event.data.error))
       }

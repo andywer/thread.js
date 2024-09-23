@@ -166,6 +166,19 @@ const worker = await spawn(BlobWorker.fromText(MyWorker))
 
 Bundle this module and you will obtain a stand-alone bundle that has its worker inlined. This is particularly useful for libraries using threads.js.
 
+## Docker
+
+When running in docker, you may frequently run into the error:
+
+```
+Error: Timeout: Did not receive an init message from worker after 10000ms. Make sure the worker calls expose().
+```
+
+Docker may need additional time to spawn the workers. There is two ways to do this:
+
+* set the environment variable `THREADS_WORKER_INIT_TIMEOUT=x0000`
+* provide `spawn` with `options.timeout` ex. `spawn(new Worker('worker.js'), { timeout: x0000 })`
+
 ## TypeScript
 
 ### Type-safe workers

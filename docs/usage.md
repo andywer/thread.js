@@ -151,7 +151,7 @@ The `BlobWorker` class works just like the regular `Worker` class, but instead o
 
 There is also a convenience function `BlobWorker.fromText()` that creates a new `BlobWorker`, but allows you to pass a source string instead of a binary buffer.
 
-Here is a webpack-based example, leveraging the `raw-loader` to inline the worker code. The worker code that we load using the `raw-loader` is the content of bundles that have been created by two previous webpack runs: one worker build targetting node.js, one for web browsers.
+Here is a webpack-based example, leveraging the `raw-loader` to inline the worker code. 
 
 ```js
 import { spawn, BlobWorker } from "threads"
@@ -162,6 +162,45 @@ const MyWorker = process.browser ? MyWorkerWeb : MyWorkerNode
 
 const worker = await spawn(BlobWorker.fromText(MyWorker))
 // Now use this worker as always
+```
+
+This can be used with a two-config webpack configuration to create the single bundle. The first config builds the worker and the second builds the library that uses it. The two are built sequentially using the `WaitPlugin` described in [this article](https://www.viget.com/articles/run-multiple-webpack-configs-sequentially/). Example `webpack.config.js`:
+
+```js
+class WaitPlugin extends WebpackBeforeBuildPlugin {
+  // see https://www.viget.com/articles/run-multiple-webpack-configs-sequentially/
+  // for implementation
+}
+
+const workerConfig = {
+  output: {
+    filename: 'worker.js',
+    path: path.resolve(__dirname, 'dist'),
+  },
+  entry: path.resolve(__dirname, 'src/worker'),
+  target: 'webworker',
+  plugins: [new UnminifiedWebpackPlugin(), new ThreadsPlugin()],
+};
+
+const libraryConfig = {
+  output: {
+    filename: 'library.min.js',
+    library: 'library',
+    libraryTarget: 'umd',
+    path: path.resolve(__dirname, 'dist'),
+  },
+  devServer: {
+    writeToDisk: true,  // necessary to ensure worker gets built and incorporated
+  },
+  ...
+  plugins: [
+    new ThreadsPlugin(),
+    new WaitPlugin('dist/worker.js'), // wait for the worker to get built
+  ],
+}
+
+module.exports = [workerConfig, libraryConfig];
+
 ```
 
 Bundle this module and you will obtain a stand-alone bundle that has its worker inlined. This is particularly useful for libraries using threads.js.

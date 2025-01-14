@@ -1,4 +1,4 @@
-import Threads from "./dist/index.js"
+import * as Threads from "./dist/index.js"
 
 export const registerSerializer = Threads.registerSerializer
 export const spawn = Threads.spawn

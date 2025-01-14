@@ -1,4 +1,4 @@
-import WorkerContext from "./dist/worker/index.js"
+import * as WorkerContext from "./dist/worker/index.js"
 
 export const expose = WorkerContext.expose
 export const registerSerializer = WorkerContext.registerSerializer
